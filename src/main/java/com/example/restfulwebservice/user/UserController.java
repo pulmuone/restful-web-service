@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 
@@ -24,18 +26,17 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}")
-    public User retrieveUser(@PathVariable(value="id") int id) {
+    public User retrieveUser(@Valid @PathVariable(value="id") @Size(min=2)int id) {
         User user = service.findOne(id);
         if(user == null) {
             throw new UserNotFoundException(String.format("ID[%s] not found", id));
         }
-
         return user;
     }
 
     @PostMapping("/users")
-    // @RequestBody : Client에서 json으로 받을 경우 사용함.
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    // @RequestBody : Client에서 json이나 object으로 받을 경우 사용함.
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         User savedUser = service.save(user);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
