@@ -1,6 +1,8 @@
 package com.example.restfulwebservice.user;
 
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +22,20 @@ public class UserController {
         this.service = service;
     }
 
+    /*
     @GetMapping("/users")
     public List<User> retrieveAllUsers(){
         return service.findAll();
+    }
+     */
+
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> retrieveAllUsers(){
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("MyResponseHeader", "MyValue");
+        var result = service.findAll();
+        return new ResponseEntity<List<User>>(result, responseHeaders, HttpStatus.OK);
     }
 
     @GetMapping("/users/{id}")
@@ -34,6 +47,7 @@ public class UserController {
         return user;
     }
 
+    /*
     @PostMapping("/users")
     // @RequestBody : Client에서 json이나 object으로 받을 경우 사용함.
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
@@ -47,6 +61,25 @@ public class UserController {
         
         return ResponseEntity.created(location).build();
     }
+     */
+
+    @PostMapping("/users")
+    // @RequestBody : Client에서 json이나 object으로 받을 경우 사용함.
+    public ResponseEntity<String> createUser(@Valid @RequestBody User user) {
+        User savedUser = service.save(user);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setLocation(location);
+        responseHeaders.set("MyResponseHeader", "MyValue");
+
+        return  ResponseEntity.created(location).headers(responseHeaders).body("OK");
+        //return new ResponseEntity<String>("Hello World", responseHeaders, HttpStatus.CREATED);
+    }
 
     @DeleteMapping("/users/{id}")
     public void deleteUser(@PathVariable int id) {
@@ -57,6 +90,7 @@ public class UserController {
         }
     }
 
+    //https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/http/ResponseEntity.html
     @PutMapping("/users/{id}")
     public ResponseEntity<Object> updateUser(@RequestBody User user, @PathVariable int id) {
         User savedUser = service.update(user, id);
