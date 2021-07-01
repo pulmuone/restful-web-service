@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import lombok.var;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -48,12 +49,12 @@ public class AdminUserController {
         MappingJacksonValue mapping = new MappingJacksonValue(result);
         mapping.setFilters(filters);
 
-
         return mapping;
     }
 
     //@GetMapping(value="/users/{id}", headers = "X-API-VERISON=1")
     @GetMapping(value="/users/{id}", produces = "application/vnd.company.appv1+json")
+    //@GetMapping(value="/users/{id}/", params = "version=1")
     public MappingJacksonValue retrieveUser(@PathVariable(value="id") int id) {
         User user = service.findOne(id);
         if(user == null) {
@@ -61,10 +62,36 @@ public class AdminUserController {
         }
 
         SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter
-                .filterOutAllExcept("id", "name", "password", "ssn");
+                .filterOutAllExcept("id", "name", "joinDate", "ssn");
 
         FilterProvider filters = new SimpleFilterProvider().addFilter("UserInfo", filter);
         MappingJacksonValue mapping = new MappingJacksonValue(user);
+        mapping.setFilters(filters);
+
+        return mapping;
+    }
+
+    @GetMapping(value="/users/{id}", produces = "application/vnd.company.appv2+json")
+    //@GetMapping(value="/users/{id}", headers = "X-API-VERISON=2")
+    //@GetMapping(value="/users/{id}/", params="version=2") //http://localhost:8088/admin/users/1/?version=2
+    public MappingJacksonValue retrieveUserV2(@PathVariable(value="id") int id) {
+        User user = service.findOne(id);
+
+        if(user == null) {
+            throw new UserNotFoundException(String.format("ID[%s] not found", id));
+        }
+
+        //User -> User2
+        UserV2 userV2 = new UserV2();
+        BeanUtils.copyProperties(user, userV2); //id, name, joinDate, password, ssn
+        userV2.setGrade("VIP");
+
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter
+                .filterOutAllExcept("id", "name", "joinDate", "grade");
+
+        FilterProvider filters = new SimpleFilterProvider().addFilter("UserInfoV2", filter);
+
+        MappingJacksonValue mapping = new MappingJacksonValue(userV2);
         mapping.setFilters(filters);
 
         return mapping;

@@ -8,6 +8,17 @@ logging:
 spring:
   messages:
     basename: messages
+#  security:
+#    user:
+#      name: username
+#      password: password
+  datasource:
+    url: jdbc:h2:mem:testdb
+  jpa:
+    show-sql: true
+  h2:
+    console:
+      enabled: true
 
 management:
   endpoints:

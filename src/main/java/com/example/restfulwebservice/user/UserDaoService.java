@@ -39,6 +39,8 @@ public class UserDaoService {
             }
         }
         return null;
+
+        //return users.stream().filter(t-> t.getId() == id).findFirst().orElseGet(null);
     }
 
     public User deleteById(int id) {
